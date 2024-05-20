@@ -428,7 +428,9 @@ int game()
             create_figure(&next_block);
             // return 0;
         }
-        score=check_field(field);
+        score+=check_field(field);
+
+    
     }
 }
 

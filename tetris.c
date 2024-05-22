@@ -27,7 +27,6 @@ enum _colors
 
 rand_int(int a, int b)
 {
-    srand(time(NULL));
     return a + (rand()) % (b - a + 1);
 }
 
@@ -147,6 +146,12 @@ void create_figure(figure *a)
 void print_frame(int score, int field[][SCREEN_X_SIZE], const figure *block, const figure *next_block)
 {
     int i, j;
+    HANDLE hCon;
+    COORD cPos;
+    hCon = GetStdHandle(STD_OUTPUT_HANDLE);
+    cPos.X = 0;
+    cPos.Y = 0;
+    SetConsoleCursorPosition(hCon, cPos);
     for (i = 0; i < SCREEN_X_SIZE * 3 + 2; i++)
     {
         printf("=");
@@ -312,19 +317,19 @@ int check_field(int field[][SCREEN_X_SIZE])
                 break;
             }
         }
-        
-        if(f)
+
+        if (f)
         {
-            c = c * 2 +100;
-            for(k=i;k>=1;k--){
-                for(j=0;j<SCREEN_X_SIZE-1;j++){
-                    field[k][j]=field[k-1][j];
+            c = c * 2 + 100;
+            for (k = i; k >= 1; k--)
+            {
+                for (j = 0; j < SCREEN_X_SIZE - 1; j++)
+                {
+                    field[k][j] = field[k - 1][j];
                 }
             }
             i++;
         }
-        
-        
     }
 
     return c;
@@ -343,9 +348,10 @@ int game()
     char input = 0;
     int direction;
     int field[SCREEN_Y_SIZE][SCREEN_X_SIZE] = {0};
-
+    int i;
     create_figure(&block);
     create_figure(&next_block);
+
     buf_block = block;
 
     while (1)
@@ -354,10 +360,12 @@ int game()
         while (((double)(clock() - frame_start_time)) / CLOCKS_PER_SEC < 0.2)
         {
             start_time = clock();
-            system("cls");
+
+            // system("cls"); //
+
             print_frame(score, field, &block, &next_block);
             // printf("%d\n", input);
-            while (((double)(clock() - start_time)) / CLOCKS_PER_SEC < 0.1)
+            while (((double)(clock() - start_time)) / CLOCKS_PER_SEC < 0.05)
             {
                 if (kbhit())
                 {
@@ -420,7 +428,8 @@ int game()
         }
         else
         {
-            if(buf_block.coords.y<0){
+            if (buf_block.coords.y < 0)
+            {
                 return score;
             }
             overlay(&block, field);
@@ -428,15 +437,19 @@ int game()
             create_figure(&next_block);
             // return 0;
         }
-        score+=check_field(field);
-
-    
+        score += check_field(field);
     }
 }
 
 int main()
 {
 
+    srand(time(NULL));
+    HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
+    DWORD consoleMode;
+    GetConsoleMode(console, &consoleMode);
+    consoleMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+    SetConsoleMode(console, consoleMode);
     printf("SCORE: %d", game());
     return 0;
 }

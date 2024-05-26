@@ -22,10 +22,7 @@ rand_int(int a, int b)
     return a + (rand()) % (b - a + 1);
 }
 
-typedef struct point
-{
-
-} point;
+int;
 
 typedef struct figure
 {

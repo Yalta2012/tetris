@@ -6,15 +6,16 @@
 
 #define SCREEN_X_SIZE 10
 #define SCREEN_Y_SIZE 20
+#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
 
-enum _moving
-{
-    STOP,
-    ROTATE,
-    RIGHT,
-    DOWN,
-    LEFT
-};
+// enum _moving
+// {
+//     STOP,
+//     ROTATE,
+//     RIGHT,
+//     DOWN,
+//     LEFT
+// };
 
 enum _colors
 {
@@ -32,13 +33,13 @@ rand_int(int a, int b)
 
 typedef struct point
 {
-    int x;
-    int y;
+
 } point;
 
 typedef struct figure
 {
-    point coords;
+    int x;
+    int y;
     int color;
     int type;
     int blocks[4][4];
@@ -129,14 +130,14 @@ void create_figure(figure *a)
             a->blocks[i][j] = figures[a->type][i][j];
         }
     }
-    a->coords.x = 3;
+    a->x = 3;
     for (i = 3; i >= 0; i--)
     {
         for (j = 0; j < 4; j++)
         {
             if (a->blocks[i][j])
             {
-                a->coords.y = j - 5;
+                a->y = j - 5;
                 return;
             }
         }
@@ -163,7 +164,7 @@ void print_frame(int score, int field[][SCREEN_X_SIZE], const figure *block, con
         printf("|");
         for (j = 0; j < SCREEN_X_SIZE; j++)
         {
-            if ((i - block->coords.y >= 0) && (i - block->coords.y < 4) && (j - block->coords.x >= 0) && (j - block->coords.x < 4) && (block->blocks[i - block->coords.y][j - block->coords.x]))
+            if ((i - block->y >= 0) && (i - block->y < 4) && (j - block->x >= 0) && (j - block->x < 4) && (block->blocks[i - block->y][j - block->x]))
             {
                 printf("\x1B[1;3%dm[ ]\e[0m", block->color);
             }
@@ -236,13 +237,12 @@ int check_bottom(figure *a, int field[][SCREEN_X_SIZE])
         {
             if (a->blocks[i][j])
             {
-                x = a->coords.x + j;
-                y = a->coords.y + i;
+                x = a->x + j;
+                y = a->y + i;
                 if (y < 0)
                     break;
                 if (y > SCREEN_Y_SIZE - 1 || field[y][x])
                 {
-                    // printf("%d %d\n", x, y);
                     return 0;
                 }
             }
@@ -263,13 +263,11 @@ int check_turn(figure *a, int field[][SCREEN_X_SIZE])
         {
             if (a->blocks[i][j])
             {
-                x = a->coords.x + j;
-                y = a->coords.y + i;
-                // if (y < 0)
-                //     break;
+                x = a->x + j;
+                y = a->y + i;
+
                 if (x > SCREEN_X_SIZE - 1 || x < 0 || y > SCREEN_Y_SIZE - 1 || (field[y][x] && y >= 0))
                 {
-                    // printf("%d %d\n", x, y);
                     return 0;
                 }
             }
@@ -289,8 +287,8 @@ void overlay(figure *a, int field[][SCREEN_X_SIZE])
         {
             if (a->blocks[i][j])
             {
-                x = a->coords.x + j;
-                y = a->coords.y + i;
+                x = a->x + j;
+                y = a->y + i;
                 if (y >= 0)
                 {
                     // printf("NEW: x = %d y = %d\n", x, y);
@@ -335,6 +333,8 @@ int check_field(int field[][SCREEN_X_SIZE])
     return c;
 }
 
+
+
 int game()
 {
     clock_t start_time, frame_start_time;
@@ -346,18 +346,18 @@ int game()
     figure next_block;
     figure buf_block;
     char input = 0;
-    int direction;
     int field[SCREEN_Y_SIZE][SCREEN_X_SIZE] = {0};
     int i;
+    double change_frame_time;
     create_figure(&block);
     create_figure(&next_block);
 
     buf_block = block;
-
+    change_frame_time = 0.25;
     while (1)
     {
         frame_start_time = clock();
-        while (((double)(clock() - frame_start_time)) / CLOCKS_PER_SEC < 0.2)
+        while (((double)(clock() - frame_start_time)) / CLOCKS_PER_SEC < change_frame_time)
         {
             start_time = clock();
 
@@ -365,30 +365,26 @@ int game()
 
             print_frame(score, field, &block, &next_block);
             // printf("%d\n", input);
-            while (((double)(clock() - start_time)) / CLOCKS_PER_SEC < 0.05)
+            while (((double)(clock() - start_time)) / CLOCKS_PER_SEC < 0.03)
             {
                 if (kbhit())
                 {
                     input = _getch();
                 }
-                else
-                {
-                    direction = STOP;
-                }
+
             }
 
             if (input == 'h') // LEFT
             {
-                buf_block.coords.x--;
+                buf_block.x--;
                 if (check_turn(&buf_block, field))
                 {
-                    block.coords.x--;
+                    block.x--;
                 }
             }
 
             if (input == 'u') // ROTATE
             {
-                direction = ROTATE;
                 rotate_figure(&buf_block);
                 if (check_turn(&buf_block, field))
                 {
@@ -398,21 +394,19 @@ int game()
 
             if (input == 'j') // DOWN
             {
-                direction = DOWN;
-                buf_block.coords.y++;
+                buf_block.y++;
                 if (check_turn(&buf_block, field))
                 {
-                    block.coords.y++;
+                    block.y++;
                 }
             }
 
             if (input == 'k')
             {
-                direction = RIGHT;
-                buf_block.coords.x++;
+                buf_block.x++;
                 if (check_turn(&buf_block, field))
                 {
-                    block.coords.x++;
+                    block.x++;
                 }
             };
 
@@ -420,15 +414,15 @@ int game()
         }
         buf_block = block;
 
-        buf_block.coords.y++;
+        buf_block.y++;
         if (check_bottom(&buf_block, field))
         {
 
-            block.coords.y++;
+            block.y++;
         }
         else
         {
-            if (buf_block.coords.y < 0)
+            if (buf_block.y < 0)
             {
                 return score;
             }
@@ -438,6 +432,8 @@ int game()
             // return 0;
         }
         score += check_field(field);
+        change_frame_time=(25-(score/1000))/100;
+
     }
 }
 
@@ -450,6 +446,56 @@ int main()
     GetConsoleMode(console, &consoleMode);
     consoleMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
     SetConsoleMode(console, consoleMode);
-    printf("SCORE: %d", game());
+    clock_t start_time;
+    int score;
+    int key;
+
+    while (1)
+    {
+        system("cls");
+
+        printf("\x1b[1;30;47m\tTETRIS\x1b[0m\n\n");
+        printf("\tMenu\n"
+               "\t1.Start game\n"
+               "\t2.Control\n"
+               "\t0.Exit\n"
+               "\t>> ");
+        scanf("%d", &key);
+        fflush(stdin);
+
+        switch (key)
+        {
+        case 1:
+            score = game();
+            system("cls");
+
+            printf("\x1b[1;30;47m\tGAME OVER\x1b[0m\n\n");
+            printf("\n\tYOUR SCORE: %d\n", score);
+            // Sleep(2000);
+            start_time = clock();
+            while (((double)(clock() - start_time)) / CLOCKS_PER_SEC < 2)
+            {
+            }
+            _getch();
+            break;
+        case 2:
+            system("cls");
+            printf("\x1b[1;30;47m\tCONTROL\x1b[0m\n\n"
+                   "      ROTATE - [u]\n"
+                   "    LEFT - [h] [j] [k] - RIGHT \n"
+                   "\t\t|\n"
+                   "\t       DOWN  \n"
+                   "\tback - any key\n"
+                   "\t>> ");
+            _getch();
+            break;
+        case 0:
+            return 0;
+        default:
+            printf("Unknown command\n");
+            break;
+        }
+    }
     return 0;
+
 }

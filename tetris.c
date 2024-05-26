@@ -15,14 +15,13 @@ enum _colors
     YELLOW = 3,
     BLUE = 4,
     PURPLE = 5
-}
+};
 
-rand_int(int a, int b)
+int rand_int(int a, int b)
 {
     return a + (rand()) % (b - a + 1);
 }
 
-int;
 
 typedef struct figure
 {

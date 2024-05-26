@@ -8,15 +8,6 @@
 #define SCREEN_Y_SIZE 20
 #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
 
-// enum _moving
-// {
-//     STOP,
-//     ROTATE,
-//     RIGHT,
-//     DOWN,
-//     LEFT
-// };
-
 enum _colors
 {
     RED = 1,

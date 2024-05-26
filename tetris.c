@@ -324,8 +324,6 @@ int check_field(int field[][SCREEN_X_SIZE])
     return c;
 }
 
-
-
 int game()
 {
     clock_t start_time, frame_start_time;
@@ -362,7 +360,6 @@ int game()
                 {
                     input = _getch();
                 }
-
             }
 
             if (input == 'h') // LEFT
@@ -423,8 +420,7 @@ int game()
             // return 0;
         }
         score += check_field(field);
-        change_frame_time=(25-(score/1000))/100;
-
+        change_frame_time = ((25 - (score / 1000))/100.0);
     }
 }
 
@@ -437,6 +433,13 @@ int main()
     GetConsoleMode(console, &consoleMode);
     consoleMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
     SetConsoleMode(console, consoleMode);
+
+    HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_CURSOR_INFO structCursorInfo;
+    GetConsoleCursorInfo(handle, &structCursorInfo);
+    structCursorInfo.bVisible = FALSE;
+    SetConsoleCursorInfo(handle, &structCursorInfo);
+
     clock_t start_time;
     int score;
     int key;
@@ -488,5 +491,4 @@ int main()
         }
     }
     return 0;
-
 }

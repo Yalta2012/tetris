@@ -503,6 +503,7 @@ int new_records(score_name *score_list, int score, char *way)
     COORD cPOS;
     int i, j;
     char b;
+    char buf[6] = {0};
     for (i = 0; i < SCORE_BOARD_SIZE; i++)
     {
         if (score > score_list[i].score)
@@ -518,7 +519,7 @@ int new_records(score_name *score_list, int score, char *way)
                 b = _getche();
                 if (b >= '0' && b < 127)
                 {
-                    score_list[i].name[j] = b;
+                    buf[j] = b;
                 }
                 else
                 {
@@ -533,12 +534,14 @@ int new_records(score_name *score_list, int score, char *way)
                     j--;
                 }
             }
-            score_list[i].name[6] = 0;
-
             for (j = SCORE_BOARD_SIZE - 1; j > i; j--)
             {
                 score_list[j].score = score_list[j - 1].score;
+                strcpy(score_list[j].name, score_list[j - 1].name);
             }
+            strcpy(score_list[i].name, buf);
+            score_list[i].name[6] = 0;
+
             score_list[i].score = score;
             save_score_board(score_list, SAVE_FILE);
             break;

@@ -6,8 +6,9 @@
 
 #define SCREEN_X_SIZE 10
 #define SCREEN_Y_SIZE 20
+#define SCORE_BOARD_SIZE 5
 #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
-
+#define SAVE_FILE "score_list.txt"
 enum _colors
 {
     RED = 1,
@@ -22,7 +23,6 @@ int rand_int(int a, int b)
     return a + (rand()) % (b - a + 1);
 }
 
-
 typedef struct figure
 {
     int x;
@@ -31,6 +31,12 @@ typedef struct figure
     int type;
     int blocks[4][4];
 } figure;
+
+typedef struct score_name
+{
+    char name[6];
+    int score;
+} score_name;
 
 void rotate_figure(figure *a)
 {
@@ -358,7 +364,7 @@ int game()
                 }
             }
 
-            if (input == 'h') // LEFT
+            if (input == 'h' || input == 'р') // LEFT
             {
                 buf_block.x--;
                 if (check_turn(&buf_block, field))
@@ -367,7 +373,7 @@ int game()
                 }
             }
 
-            if (input == 'u') // ROTATE
+            if (input == 'u' || input == 'г') // ROTATE
             {
                 rotate_figure(&buf_block);
                 if (check_turn(&buf_block, field))
@@ -376,7 +382,7 @@ int game()
                 }
             }
 
-            if (input == 'j') // DOWN
+            if (input == 'j' || input == 'о') // DOWN
             {
                 buf_block.y++;
                 if (check_turn(&buf_block, field))
@@ -385,7 +391,7 @@ int game()
                 }
             }
 
-            if (input == 'k')
+            if (input == 'k' || input == 'л')
             {
                 buf_block.x++;
                 if (check_turn(&buf_block, field))
@@ -416,7 +422,127 @@ int game()
             // return 0;
         }
         score += check_field(field);
-        change_frame_time = ((25 - (score / 1000))/100.0);
+        change_frame_time = ((25 - (score / 1000)) / 100.0);
+    }
+}
+
+int save_score_board(score_name *list, char *way)
+{
+    FILE *f = fopen(way, "w");
+    int i;
+    if (!f)
+        return 0;
+    for (i = 0; i < SCORE_BOARD_SIZE; i++)
+    {
+        fprintf(f, "%s %d\n", list[i].name, list[i].score);
+    }
+    return 1;
+}
+void sort_board(score_name *list)
+{
+    int i, j;
+    score_name temp;
+    for (int i = 0; i < SCORE_BOARD_SIZE; i++)
+    {
+        for (int j = i + 1; j < SCORE_BOARD_SIZE; j++)
+        {
+            if (list[i].score < list[j].score)
+            {
+                temp = list[i];
+                list[i] = list[j];
+                list[j] = temp;
+            }
+        }
+    }
+}
+
+int import_score_board(score_name *list, char *way)
+{
+    FILE *f = fopen(way, "r");
+    char chbuf[100];
+    int i;
+    if (!f)
+    {
+        f = fopen(way, "w");
+        if (!f)
+            return 0;
+        for (i = 0; i < SCORE_BOARD_SIZE; i++)
+        {
+            fprintf(f, "EMPTY 0\n");
+        }
+        fclose(f);
+    }
+    fclose(f);
+    f = fopen(way, "r");
+    for (i = 0; i < SCORE_BOARD_SIZE; i++)
+    {
+        if (fscanf(f, "%s %d", chbuf, &list[i].score) != 2)
+        {
+            strcpy(list[i].name, "EMPTY");
+            list[i].score = 0;
+        }
+        else
+        {
+            list[i].name[5] = 0;
+            strncpy(list[i].name, chbuf, 5);
+        }
+    }
+    fclose(f);
+    sort_board(list);
+    return 1;
+}
+
+int new_records(score_name *score_list, int score, char *way)
+{
+    HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_CURSOR_INFO structCursorInfo;
+    GetConsoleCursorInfo(console, &structCursorInfo);
+    structCursorInfo.bVisible = FALSE;
+    SetConsoleCursorInfo(console, &structCursorInfo);
+
+    COORD cPOS;
+    int i, j;
+    char b;
+    for (i = 0; i < SCORE_BOARD_SIZE; i++)
+    {
+        if (score > score_list[i].score)
+        {
+            printf("\t!!!NEW RECORD!!!\n"
+                   "\tEnter your name:\n"
+                   ">>_____");
+            cPOS.X = 2;
+            cPOS.Y = 6;
+            SetConsoleCursorPosition(console, cPOS);
+            for (j = 0; j < 5; j++)
+            {
+                b = _getche();
+                if (b >= '0' && b < 127)
+                {
+                    score_list[i].name[j] = b;
+                }
+                else
+                {
+                    if (!b)
+                    {
+                        _getch();
+                    }
+                    cPOS.X = 2 + j;
+                    SetConsoleCursorPosition(console, cPOS);
+                    printf("_");
+                    SetConsoleCursorPosition(console, cPOS);
+                    j--;
+                }
+            }
+            score_list[i].name[6] = 0;
+
+            for (j = SCORE_BOARD_SIZE - 1; j > i; j--)
+            {
+                score_list[j].score = score_list[j - 1].score;
+            }
+            score_list[i].score = score;
+            save_score_board(score_list, SAVE_FILE);
+            break;
+        }
     }
 }
 
@@ -430,16 +556,22 @@ int main()
     consoleMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
     SetConsoleMode(console, consoleMode);
 
-    HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_CURSOR_INFO structCursorInfo;
-    GetConsoleCursorInfo(handle, &structCursorInfo);
+    GetConsoleCursorInfo(console, &structCursorInfo);
     structCursorInfo.bVisible = FALSE;
-    SetConsoleCursorInfo(handle, &structCursorInfo);
+    SetConsoleCursorInfo(console, &structCursorInfo);
+
+    COORD cPOS;
 
     clock_t start_time;
     int score;
     int key;
+    int i, j;
+    char b;
+    score_name score_list[SCORE_BOARD_SIZE];
+    FILE *f;
 
+    import_score_board(score_list, SAVE_FILE);
     while (1)
     {
         system("cls");
@@ -448,6 +580,7 @@ int main()
         printf("\tMenu\n"
                "\t1.Start game\n"
                "\t2.Control\n"
+               "\t3.Leaderboard\n"
                "\t0.Exit\n"
                "\t>> ");
         scanf("%d", &key);
@@ -456,17 +589,18 @@ int main()
         switch (key)
         {
         case 1:
+            system("cls");
             score = game();
             system("cls");
-
             printf("\x1b[1;30;47m\tGAME OVER\x1b[0m\n\n");
             printf("\n\tYOUR SCORE: %d\n", score);
-            // Sleep(2000);
             start_time = clock();
             while (((double)(clock() - start_time)) / CLOCKS_PER_SEC < 2)
             {
+                _getch();
             }
-            _getch();
+            new_records(score_list, score, SAVE_FILE);
+
             break;
         case 2:
             system("cls");
@@ -477,6 +611,16 @@ int main()
                    "\t       DOWN  \n"
                    "\tback - any key\n"
                    "\t>> ");
+            _getch();
+            break;
+        case 3:
+            system("cls");
+            printf("\x1b[1;30;47m\tRECORDS\x1b[0m\n");
+            for (i = 0; i < SCORE_BOARD_SIZE; i++)
+            {
+                printf("\t%s %d\n", score_list[i].name, score_list[i].score);
+            }
+            printf("\tback - any key\n\t>> ");
             _getch();
             break;
         case 0:

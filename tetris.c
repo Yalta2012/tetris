@@ -7,8 +7,11 @@
 #define SCREEN_X_SIZE 10
 #define SCREEN_Y_SIZE 20
 #define SCORE_BOARD_SIZE 5
-#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
 #define SAVE_FILE "score_list.txt"
+
+#ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
+#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
+#endif
 enum _colors
 {
     RED = 1,
@@ -137,7 +140,7 @@ void create_figure(figure *a)
     }
 }
 
-void print_frame(int score, int field[][SCREEN_X_SIZE], const figure *block, const figure *next_block)
+void print_frame(int score, int field[][SCREEN_X_SIZE], const figure *block, const figure *next_block, int pause)
 {
     int i, j;
     HANDLE hCon;
@@ -171,6 +174,14 @@ void print_frame(int score, int field[][SCREEN_X_SIZE], const figure *block, con
             }
         }
         printf("|");
+        if (pause && i == 5)
+        {
+            printf("\tPAUSE");
+        }
+        else if (i == 5)
+        {
+            printf("\t     ");
+        }
 
         if (i == 6)
             printf("\tSCORE: %d", score);
@@ -332,19 +343,23 @@ int game()
 
     int scr_x = SCREEN_X_SIZE;
     int scr_y = SCREEN_Y_SIZE;
-    int score = 0;
+    int score;
     figure block;
     figure next_block;
     figure buf_block;
-    char input = 0;
+    char input;
     int field[SCREEN_Y_SIZE][SCREEN_X_SIZE] = {0};
     int i;
+    int pause;
     double change_frame_time;
     create_figure(&block);
     create_figure(&next_block);
 
     buf_block = block;
     change_frame_time = 0.25;
+    pause = 0;
+    input = 0;
+    score = 0;
     while (1)
     {
         frame_start_time = clock();
@@ -354,7 +369,7 @@ int game()
 
             // system("cls"); //
 
-            print_frame(score, field, &block, &next_block);
+            print_frame(score, field, &block, &next_block, pause);
             // printf("%d\n", input);
             while (((double)(clock() - start_time)) / CLOCKS_PER_SEC < 0.03)
             {
@@ -363,44 +378,55 @@ int game()
                     input = _getch();
                 }
             }
-
-            if (input == 'h' || input == 'р') // LEFT
+            if (input == 27)
             {
-                buf_block.x--;
-                if (check_turn(&buf_block, field))
-                {
-                    block.x--;
-                }
-            }
-
-            if (input == 'u' || input == 'г') // ROTATE
-            {
-                rotate_figure(&buf_block);
-                if (check_turn(&buf_block, field))
-                {
-                    rotate_figure(&block);
-                }
-            }
-
-            if (input == 'j' || input == 'о') // DOWN
-            {
-                buf_block.y++;
-                if (check_turn(&buf_block, field))
-                {
-                    block.y++;
-                }
-            }
-
-            if (input == 'k' || input == 'л')
-            {
-                buf_block.x++;
-                if (check_turn(&buf_block, field))
-                {
-                    block.x++;
-                }
+                pause = !pause;
             };
+            if (!pause)
+            {
+
+                if (input == 'h') // LEFT
+                {
+                    buf_block.x--;
+                    if (check_turn(&buf_block, field))
+                    {
+                        block.x--;
+                    }
+                }
+
+                if (input == 'u') // ROTATE
+                {
+                    rotate_figure(&buf_block);
+                    if (check_turn(&buf_block, field))
+                    {
+                        rotate_figure(&block);
+                    }
+                }
+
+                if (input == 'j') // DOWN
+                {
+                    buf_block.y++;
+                    if (check_turn(&buf_block, field))
+                    {
+                        block.y++;
+                    }
+                }
+
+                if (input == 'k')
+                {
+                    buf_block.x++;
+                    if (check_turn(&buf_block, field))
+                    {
+                        block.x++;
+                    }
+                }
+            }
 
             input = 0;
+        }
+        if (pause)
+        {
+            continue;
         }
         buf_block = block;
 
@@ -438,6 +464,7 @@ int save_score_board(score_name *list, char *way)
     }
     return 1;
 }
+
 void sort_board(score_name *list)
 {
     int i, j;
@@ -608,6 +635,7 @@ int main()
         case 2:
             system("cls");
             printf("\x1b[1;30;47m\tCONTROL\x1b[0m\n\n"
+                   "[Esc] - PAUSE\n"
                    "      ROTATE - [u]\n"
                    "    LEFT - [h] [j] [k] - RIGHT \n"
                    "\t\t|\n"

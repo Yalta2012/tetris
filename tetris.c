@@ -12,6 +12,7 @@
 #ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
 #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
 #endif
+
 enum _colors
 {
     RED = 1,
@@ -140,7 +141,7 @@ void create_figure(figure *a)
     }
 }
 
-void print_frame(int score, int field[][SCREEN_X_SIZE], const figure *block, const figure *next_block, int pause)
+void print_frame(int score, char field[][SCREEN_X_SIZE], const figure *block, const figure *next_block, int pause)
 {
     int i, j;
     HANDLE hCon;
@@ -231,7 +232,7 @@ void print_frame(int score, int field[][SCREEN_X_SIZE], const figure *block, con
     printf("\n");
 }
 
-int check_bottom(figure *a, int field[][SCREEN_X_SIZE])
+int check_bottom(figure *a, char field[][SCREEN_X_SIZE])
 {
     int i, j;
     int x, y;
@@ -256,7 +257,7 @@ int check_bottom(figure *a, int field[][SCREEN_X_SIZE])
     return 1;
 }
 
-int check_turn(figure *a, int field[][SCREEN_X_SIZE])
+int check_turn(figure *a, char field[][SCREEN_X_SIZE])
 {
 
     int i, j;
@@ -281,7 +282,7 @@ int check_turn(figure *a, int field[][SCREEN_X_SIZE])
     return 1;
 }
 
-void overlay(figure *a, int field[][SCREEN_X_SIZE])
+void overlay(figure *a, char field[][SCREEN_X_SIZE])
 {
     int i, j;
     int x, y;
@@ -304,7 +305,7 @@ void overlay(figure *a, int field[][SCREEN_X_SIZE])
     }
 }
 
-int check_field(int field[][SCREEN_X_SIZE])
+int check_field(char field[][SCREEN_X_SIZE])
 {
     int i, j, c, f, k;
     c = 0;
@@ -348,7 +349,7 @@ int game()
     figure next_block;
     figure buf_block;
     char input;
-    int field[SCREEN_Y_SIZE][SCREEN_X_SIZE] = {0};
+    char field[SCREEN_Y_SIZE][SCREEN_X_SIZE] = {0};
     int i;
     int pause;
     double change_frame_time;
@@ -362,6 +363,7 @@ int game()
     score = 0;
     while (1)
     {
+
         frame_start_time = clock();
         while (((double)(clock() - frame_start_time)) / CLOCKS_PER_SEC < change_frame_time)
         {
@@ -376,6 +378,9 @@ int game()
                 if (kbhit())
                 {
                     input = _getch();
+                    if(!input){
+                        input = _getch();
+                    }
                 }
             }
             if (input == 27)
@@ -384,8 +389,8 @@ int game()
             };
             if (!pause)
             {
-
-                if (input == 'h') // LEFT
+                
+                if (input == 'h' || input == 75) // LEFT
                 {
                     buf_block.x--;
                     if (check_turn(&buf_block, field))
@@ -394,7 +399,7 @@ int game()
                     }
                 }
 
-                if (input == 'u') // ROTATE
+                if (input == 'u' || input == 72) // ROTATE
                 {
                     rotate_figure(&buf_block);
                     if (check_turn(&buf_block, field))
@@ -403,7 +408,7 @@ int game()
                     }
                 }
 
-                if (input == 'j') // DOWN
+                if (input == 'j' || input == 80) // DOWN
                 {
                     buf_block.y++;
                     if (check_turn(&buf_block, field))
@@ -412,7 +417,7 @@ int game()
                     }
                 }
 
-                if (input == 'k')
+                if (input == 'k' || input == 77)
                 {
                     buf_block.x++;
                     if (check_turn(&buf_block, field))
@@ -469,9 +474,9 @@ void sort_board(score_name *list)
 {
     int i, j;
     score_name temp;
-    for (int i = 0; i < SCORE_BOARD_SIZE; i++)
+    for ( i = 0; i < SCORE_BOARD_SIZE; i++)
     {
-        for (int j = i + 1; j < SCORE_BOARD_SIZE; j++)
+        for (j = i + 1; j < SCORE_BOARD_SIZE; j++)
         {
             if (list[i].score < list[j].score)
             {
@@ -544,10 +549,11 @@ int new_records(score_name *score_list, int score, char *way)
             for (j = 0; j < 5; j++)
             {
                 b = _getche();
-                if (b >= '0' && b < 127)
+                if (b >= 48 && b < 127)
                 {
                     buf[j] = b;
                 }
+                
                 else
                 {
                     if (!b)

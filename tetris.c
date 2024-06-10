@@ -368,9 +368,7 @@ int game()
         while (((double)(clock() - frame_start_time)) / CLOCKS_PER_SEC < change_frame_time)
         {
             start_time = clock();
-
             // system("cls"); //
-
             print_frame(score, field, &block, &next_block, pause);
             // printf("%d\n", input);
             while (((double)(clock() - start_time)) / CLOCKS_PER_SEC < 0.03)
@@ -378,7 +376,8 @@ int game()
                 if (kbhit())
                 {
                     input = _getch();
-                    if(!input){
+                    if (!input)
+                    {
                         input = _getch();
                     }
                 }
@@ -389,7 +388,7 @@ int game()
             };
             if (!pause)
             {
-                
+
                 if (input == 'h' || input == 75) // LEFT
                 {
                     buf_block.x--;
@@ -474,7 +473,7 @@ void sort_board(score_name *list)
 {
     int i, j;
     score_name temp;
-    for ( i = 0; i < SCORE_BOARD_SIZE; i++)
+    for (i = 0; i < SCORE_BOARD_SIZE; i++)
     {
         for (j = i + 1; j < SCORE_BOARD_SIZE; j++)
         {
@@ -508,7 +507,7 @@ int import_score_board(score_name *list, char *way)
     f = fopen(way, "r");
     for (i = 0; i < SCORE_BOARD_SIZE; i++)
     {
-        if (fscanf(f, "%s %d", chbuf, &list[i].score) != 2)
+        if (fscanf(f, "%s %d", chbuf, &list[i].score) != 2 || list[i].score<0)
         {
             strcpy(list[i].name, "EMPTY");
             list[i].score = 0;
@@ -553,7 +552,7 @@ int new_records(score_name *score_list, int score, char *way)
                 {
                     buf[j] = b;
                 }
-                
+
                 else
                 {
                     if (!b)

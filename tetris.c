@@ -326,7 +326,7 @@ int check_field(char field[][SCREEN_X_SIZE])
             c = c * 2 + 100;
             for (k = i; k >= 1; k--)
             {
-                for (j = 0; j < SCREEN_X_SIZE - 1; j++)
+                for (j = 0; j < SCREEN_X_SIZE; j++)
                 {
                     field[k][j] = field[k - 1][j];
                 }

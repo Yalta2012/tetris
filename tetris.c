@@ -29,11 +29,11 @@ int rand_int(int a, int b)
 
 typedef struct figure
 {
-    int x;
-    int y;
-    int color;
-    int type;
-    int blocks[4][4];
+    char x;
+    char y;
+    char color;
+    char type;
+    char blocks[4][4];
 } figure;
 
 typedef struct score_name
@@ -81,7 +81,7 @@ void rotate_figure(figure *a)
 
 void create_figure(figure *a)
 {
-    int figures[7][4][4] = {
+    char figures[7][4][4] = {
         {{0, 1, 0, 0},
          {0, 1, 0, 0},
          {0, 1, 0, 0},
@@ -134,7 +134,7 @@ void create_figure(figure *a)
         {
             if (a->blocks[i][j])
             {
-                a->y = j - 5;
+                a->y = -i-1;
                 return;
             }
         }
@@ -271,7 +271,7 @@ int check_turn(figure *a, char field[][SCREEN_X_SIZE])
                 x = a->x + j;
                 y = a->y + i;
 
-                if (x > SCREEN_X_SIZE - 1 || x < 0 || y > SCREEN_Y_SIZE - 1 || (field[y][x] && y >= 0))
+                if (x > SCREEN_X_SIZE - 1 || x < 0 || y > SCREEN_Y_SIZE - 1 || field[y][x])
                 {
                     return 0;
                 }
@@ -296,8 +296,6 @@ void overlay(figure *a, char field[][SCREEN_X_SIZE])
                 y = a->y + i;
                 if (y >= 0)
                 {
-                    // printf("NEW: x = %d y = %d\n", x, y);
-                    // printf("NEW: j = %d i = %d\n", j, i);
                     field[y][x] = a->color;
                 }
             }
@@ -342,8 +340,6 @@ int game()
 {
     clock_t start_time, frame_start_time;
 
-    int scr_x = SCREEN_X_SIZE;
-    int scr_y = SCREEN_Y_SIZE;
     int score;
     figure block;
     figure next_block;
@@ -466,6 +462,7 @@ int save_score_board(score_name *list, char *way)
     {
         fprintf(f, "%s %d\n", list[i].name, list[i].score);
     }
+    fclose(f);
     return 1;
 }
 
@@ -507,7 +504,7 @@ int import_score_board(score_name *list, char *way)
     f = fopen(way, "r");
     for (i = 0; i < SCORE_BOARD_SIZE; i++)
     {
-        if (fscanf(f, "%s %d", chbuf, &list[i].score) != 2 || list[i].score<0)
+        if (fscanf(f, "%s %d", chbuf, &list[i].score) != 2 || list[i].score < 0)
         {
             strcpy(list[i].name, "EMPTY");
             list[i].score = 0;

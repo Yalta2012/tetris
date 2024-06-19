@@ -134,7 +134,7 @@ void create_figure(figure *a)
         {
             if (a->blocks[i][j])
             {
-                a->y = -i-1;
+                a->y = -i - 1;
                 return;
             }
         }
@@ -271,7 +271,7 @@ int check_turn(figure *a, char field[][SCREEN_X_SIZE])
                 x = a->x + j;
                 y = a->y + i;
 
-                if (x > SCREEN_X_SIZE - 1 || x < 0 || y > SCREEN_Y_SIZE - 1 || field[y][x])
+                if (x > SCREEN_X_SIZE - 1 || x < 0 || y > SCREEN_Y_SIZE - 1 || (field[y][x] && y > -1))
                 {
                     return 0;
                 }
@@ -410,6 +410,13 @@ int game()
                     {
                         block.y++;
                     }
+                    else
+                    {
+                        overlay(&block, field);
+                        block = next_block;
+                        create_figure(&next_block);
+                        break;
+                    }
                 }
 
                 if (input == 'k' || input == 77)
@@ -428,8 +435,8 @@ int game()
         {
             continue;
         }
-        buf_block = block;
 
+        buf_block = block;
         buf_block.y++;
         if (check_bottom(&buf_block, field))
         {
@@ -486,51 +493,53 @@ void sort_board(score_name *list)
 
 int import_score_board(score_name *list, char *way)
 {
-	FILE *f = fopen(way, "r");
-	char chbuf[100];
-	int i, j, error;
-	if (!f)
-	{
-		f = fopen(way, "w");
-		if (!f)
-			return 0;
-		for (i = 0; i < SCORE_BOARD_SIZE; i++)
-		{
-			fprintf(f, "EMPTY 0\n");
-		}
-		fclose(f);
-	}
-	fclose(f);
-	f = fopen(way, "r");
-	for (i = 0; i < SCORE_BOARD_SIZE; i++)
-	{
-		error = 0;
-		if (fscanf(f, "%s %d", chbuf, &list[i].score) != 2 || list[i].score < 0 || strlen(chbuf) != 5)
-		{
-			strcpy(list[i].name, "EMPTY");
-			list[i].score = 0;
-			continue;;
-		}
-		printf("(%d)",list[i].score);
-		for (j = 0; j < 5; j++)
-		{
-			if (chbuf[j] < 48 || chbuf[j] >= 127)
-			{
-				printf("(%d)",chbuf[j]);
-				strcpy(list[i].name, "EMPTY");
-				printf("(%s)",list[i].name);
-				list[i].score = 0;
-				error = 1;
-				break;
-			}
-		}
-		list[i].name[5] = 0;
-		if (error) continue;
-		strncpy(list[i].name, chbuf, 5);
-	}
-	fclose(f);
-	sort_board(list);
-	return 1;
+    FILE *f = fopen(way, "r");
+    char chbuf[100];
+    int i, j, error;
+    if (!f)
+    {
+        f = fopen(way, "w");
+        if (!f)
+            return 0;
+        for (i = 0; i < SCORE_BOARD_SIZE; i++)
+        {
+            fprintf(f, "EMPTY 0\n");
+        }
+        fclose(f);
+    }
+    fclose(f);
+    f = fopen(way, "r");
+    for (i = 0; i < SCORE_BOARD_SIZE; i++)
+    {
+        error = 0;
+        if (fscanf(f, "%s %d", chbuf, &list[i].score) != 2 || list[i].score < 0 || strlen(chbuf) != 5)
+        {
+            strcpy(list[i].name, "EMPTY");
+            list[i].score = 0;
+            continue;
+            ;
+        }
+        printf("(%d)", list[i].score);
+        for (j = 0; j < 5; j++)
+        {
+            if (chbuf[j] < 48 || chbuf[j] >= 127)
+            {
+                printf("(%d)", chbuf[j]);
+                strcpy(list[i].name, "EMPTY");
+                printf("(%s)", list[i].name);
+                list[i].score = 0;
+                error = 1;
+                break;
+            }
+        }
+        list[i].name[5] = 0;
+        if (error)
+            continue;
+        strncpy(list[i].name, chbuf, 5);
+    }
+    fclose(f);
+    sort_board(list);
+    return 1;
 }
 int new_records(score_name *score_list, int score, char *way)
 {

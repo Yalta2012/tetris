@@ -406,7 +406,7 @@ int game()
                 if (input == 'j' || input == 80) // DOWN
                 {
                     buf_block.y++;
-                    if (check_turn(&buf_block, field))
+                    if (check_bottom(&buf_block, field))
                     {
                         block.y++;
                     }
